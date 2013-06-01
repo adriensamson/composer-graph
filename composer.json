@@ -3,6 +3,10 @@
     "require": {
         "composer/composer": "dev-master"
     },
+    "autoload": {
+        "psr-0": { "Kyklydse\\ComposerGraph": "src/" }
+    },
+    "bin": ["bin/composer-graph"],
     "license": "MIT",
     "authors": [
         {
