@@ -1,0 +1,14 @@
+{
+    "name": "kyklydse/composer-graph",
+    "require": {
+        "composer/composer": "dev-master"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Adrien Samson",
+            "email": "adrien@kyklydse.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
