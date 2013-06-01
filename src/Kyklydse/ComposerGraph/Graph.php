@@ -17,11 +17,20 @@ class Graph
 
     public function getNode(PackageInterface $package)
     {
-        if (isset($this->nodes[(string) $package])) {
-            return $this->nodes[(string) $package];
+        if (isset($this->nodes[$package->getName()][$package->getVersion()])) {
+            return $this->nodes[$package->getName()][$package->getVersion()];
+        }
+        if (isset($this->nodes[$package->getName()])) {
+            foreach ($this->nodes[$package->getName()] as $node) {
+                if ($node->match($package)) {
+                    $node->addVersion($package->getVersion());
+                    $this->nodes[$package->getName()][$package->getVersion()] = $node;
+                    return $node;
+                }
+            }
         }
 
-        $this->nodes[(string) $package] = $node = new Node($package);
+        $this->nodes[$package->getName()][$package->getVersion()] = $node = new Node($package);
         $this->loadRequires($node);
         return $node;
     }
@@ -31,8 +40,8 @@ class Graph
         foreach ($node->getPackage()->getRequires() as $link) {
             /* @var $link \Composer\Package\Link */
             $choices = $this->pool->whatProvides($link->getTarget(), $link->getConstraint());
-            $nodeChoices = array_map(array($this, 'getNode'), $choices);
-            $node->addRequire((string) $link, $nodeChoices);
+            $nodeChoices = array_unique(array_map(array($this, 'getNode'), $choices));
+            $node->addRequire($link, $nodeChoices);
         }
     }
 }

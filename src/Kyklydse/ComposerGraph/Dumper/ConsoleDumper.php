@@ -24,15 +24,15 @@ class ConsoleDumper
     protected function doDump(Node $node, $level)
     {
         $prefix = str_repeat(' ', $level*2);
-        $this->output->writeln($prefix . $node->getPackage());
-        if (isset($this->viewed[(string) $node->getPackage()])) {
+        $this->output->writeln($prefix . $node);
+        if (isset($this->viewed[(string) $node])) {
             $this->output->writeln($prefix.'  [Recursion]');
             return;
         }
-        $this->viewed[(string) $node->getPackage()] = true;
+        $this->viewed[(string) $node] = true;
 
         foreach ($node->getRequires() as $name => $choices) {
-            $this->output->writeln($prefix.'* '.$name);
+            $this->output->writeln($prefix.'req '.$name);
             foreach ($choices as $choice) {
                 $this->doDump($choice, $level+1);
             }
