@@ -48,7 +48,9 @@ class Node
         if ($package->getName() !== $this->package->getName()) {
             return false;
         }
-        $requires = array_map(function(Link $link) {return sprintf('%s (%s)', $link->getTarget(), $link->getPrettyConstraint());}, $package->getRequires());
-        return array_diff($requires, array_keys($this->requires)) == array() && array_diff(array_keys($this->requires), $requires) == array();
+        $itsRequires = array_map(function(Link $link) {return sprintf('%s (%s)', $link->getTarget(), $link->getPrettyConstraint());}, $package->getRequires());
+        $myRequires = array_map(function(Link $link) {return sprintf('%s (%s)', $link->getTarget(), $link->getPrettyConstraint());}, $this->package->getRequires());
+
+        return array_diff($myRequires, $itsRequires) == array() && array_diff($itsRequires, $myRequires) == array();
     }
 }

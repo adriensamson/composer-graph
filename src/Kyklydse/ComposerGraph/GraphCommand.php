@@ -35,7 +35,7 @@ class GraphCommand extends Command
 
         $graph = new Graph($pool);
 
-        $node = $graph->getNode($composer->getPackage());
+        $node = $graph->getRootNode($composer->getPackage());
 
         $dumper = new ConsoleDumper($output);
         $dumper->dump($node);
