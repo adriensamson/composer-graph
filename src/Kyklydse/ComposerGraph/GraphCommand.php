@@ -5,7 +5,7 @@ namespace Kyklydse\ComposerGraph;
 use Composer\DependencyResolver\Pool;
 use Composer\Factory;
 use Composer\IO\ConsoleIO;
-use Kyklydse\ComposerGraph\Dumper\ConsoleDumper;
+use Kyklydse\ComposerGraph\Dumper\GraphvizDumper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Input\InputArgument;
@@ -37,7 +37,7 @@ class GraphCommand extends Command
 
         $node = $graph->getRootNode($composer->getPackage());
 
-        $dumper = new ConsoleDumper($output);
+        $dumper = new GraphvizDumper($output);
         $dumper->dump($node);
     }
 }
