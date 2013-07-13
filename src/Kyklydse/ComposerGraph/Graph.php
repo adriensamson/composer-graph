@@ -9,7 +9,16 @@ use Composer\Package\PackageInterface;
 class Graph
 {
     protected $pool;
+
+    /**
+     * @var Node[][][] $choices[targetName][constraint][]
+     */
     protected $choices = array();
+
+    /**
+     * @var Node[][] $nodes[targetName][version]
+     */
+    protected $nodes = array();
 
     public function __construct(Pool $pool)
     {
@@ -27,6 +36,9 @@ class Graph
     {
         foreach ($node->getPackage()->getRequires() as $link) {
             /* @var $link \Composer\Package\Link */
+            if ($link->getTarget() === 'php' || preg_match('/^ext-[a-z]+$/', $link->getTarget())) {
+                continue;
+            }
             $choices = $this->getChoices($link);
             $node->addRequire($link, $choices);
         }
@@ -34,33 +46,44 @@ class Graph
 
     protected function getChoices(Link $link)
     {
-        if (isset($this->choices[$this->getLinkId($link)])) {
-            return $this->choices[$this->getLinkId($link)];
+        if (isset($this->choices[$link->getTarget()][$link->getPrettyConstraint()])) {
+            return $this->choices[$link->getTarget()][$link->getPrettyConstraint()];
         }
 
         $provides = $this->pool->whatProvides($link->getTarget(), $link->getConstraint());
         $choices  = array();
 
         foreach ($provides as $provide) {
-            $matched = false;
-            foreach ($choices as $choice) {
-                if ($choice->match($provide)) {
-                    $choice->addVersion($provide->getVersion());
-                    $matched = true;
-                    break;
-                }
-            }
-            if (!$matched) {
-                $choices[] = new Node($provide);
+            $node = $this->getNode($provide);
+            if (!in_array($node, $choices)) {
+                $choices[] = $node;
             }
         }
-        $this->choices[$this->getLinkId($link)] = $choices;
+        $this->choices[$link->getTarget()][$link->getPrettyConstraint()] = $choices;
         array_walk($choices, array($this, 'loadRequires'));
         return $choices;
     }
 
-    protected function getLinkId(Link $link)
+    protected function getNode(PackageInterface $package)
     {
-        return sprintf('%s (%s)', $link->getTarget(), $link->getPrettyConstraint());
+        if (isset($this->nodes[$package->getName()][$package->getVersion()])) {
+            return $this->nodes[$package->getName()][$package->getVersion()];
+        }
+
+        if (isset($this->nodes[$package->getName()])) {
+            foreach ($this->nodes[$package->getName()] as $node) {
+                if ($node->match($package)) {
+                    $node->addVersion($package->getVersion());
+                    $this->nodes[$package->getName()][$package->getVersion()] = $node;
+
+                    return $node;
+                }
+            }
+        }
+
+        $node = new Node($package);
+        $this->nodes[$package->getName()][$package->getVersion()] = $node;
+
+        return $node;
     }
 }
