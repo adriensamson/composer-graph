@@ -16,20 +16,37 @@ class Graph
     protected $choices = array();
 
     /**
-     * @var Node[][] $nodes[targetName][version]
+     * @var Node[][] $nodes[packageName][packageVersion]
      */
     protected $nodes = array();
 
-    public function __construct(Pool $pool)
+    protected $rootNode;
+
+    public function __construct(Pool $pool, PackageInterface $package)
     {
         $this->pool = $pool;
+        $this->rootNode = new Node($package);
+        $this->loadRequires($this->rootNode);
     }
 
-    public function getRootNode(PackageInterface $package)
+    public function getRootNode()
     {
-        $node = new Node($package);
-        $this->loadRequires($node);
-        return $node;
+        return $this->rootNode;
+    }
+
+    public function getChoiceMaps()
+    {
+        $possibleChoices = array();
+        foreach ($this->choices as $targetName => $arr) {
+            $possibleChoices[$targetName] = array();
+            foreach($arr as $constraint => $choices) {
+                $possibleChoices[$targetName] += $choices;
+            }
+        }
+        $choiceMap = new ChoiceMap($possibleChoices);
+        $visitor = new ChoiceNodeVisitor();
+
+        return $visitor->getMaps($this->rootNode, $choiceMap);
     }
 
     protected function loadRequires(Node $node)
