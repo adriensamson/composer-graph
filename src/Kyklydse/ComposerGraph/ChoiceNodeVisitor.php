@@ -47,7 +47,6 @@ class ChoiceNodeVisitor
                 $this->visitNode($choice, $choiceMap, $visited);
             }
             $choiceMap = $nextMap;
-            //break;
         }
     }
 }

@@ -9,6 +9,7 @@ use Kyklydse\ComposerGraph\Dumper\GraphvizDumper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Process\Process;
 
@@ -22,15 +23,19 @@ class GraphCommand extends Command
     protected function configure()
     {
         $this->addArgument('file', InputArgument::OPTIONAL, 'Composer file to parse', 'composer.json');
-        $this->addArgument('output', InputArgument::OPTIONAL, 'Output file pattern', 'graph.$i.svg');
+        $this->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file pattern', 'graph.%i.%t');
+        $this->addOption('type', 't', InputOption::VALUE_REQUIRED, 'Output type', 'svg');
     }
 
     public function execute(Input $input, Output $output)
     {
         $file = $input->getArgument('file');
-        $outputPattern = $input->getArgument('output');
-        if (false === strpos($outputPattern, '$i')) {
-            $outputPattern .= '.$i';
+        $outputPattern = $input->getOption('output');
+        if (false === strpos($outputPattern, '%i')) {
+            $outputPattern .= '.%i';
+        }
+        if (false === strpos($outputPattern, '%t')) {
+            $outputPattern .= '.%t';
         }
         $io = new ConsoleIO($input, $output, $this->getHelperSet());
         $composer = Factory::create($io, $file);
@@ -47,9 +52,14 @@ class GraphCommand extends Command
         $dumper = new GraphvizDumper();
 
         foreach ($maps as $i => $map) {
-            $filename = str_replace('$i', $i, $outputPattern);
+            $filename = strtr($outputPattern, array('%i' => $i, '%t' => $input->getOption('type')));
             $dotData = $dumper->dump($node, $map);
-            $process = new Process('dot -Tsvg -o'.$filename, null, null, $dotData);
+            $process = new Process(
+                sprintf('dot -T%s -o%s', $input->getOption('type'), $filename),
+                null,
+                null,
+                $dotData
+            );
             $process->run();
         }
     }
