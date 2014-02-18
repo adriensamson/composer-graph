@@ -40,7 +40,12 @@ class Node
 
     public function __toString()
     {
-        return sprintf('%s (%s)', $this->package->getName(), implode(', ', $this->versions));
+        if (count($this->versions) > 4) {
+            $versions = sprintf('%s, ..., %s', $this->versions[0], end($this->versions));
+        } else {
+            $versions = implode(', ', $this->versions);
+        }
+        return sprintf('%s (%s)', $this->package->getName(), $versions);
     }
 
     public function match(PackageInterface $package)
