@@ -13,13 +13,13 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
-class GraphCommand extends Command
+class GraphAllCommand extends Command
 {
     protected function configure()
     {
-        $this->setName('graph');
+        $this->setName('graph-all');
         $this->addArgument('file', InputArgument::OPTIONAL, 'Composer file to parse', 'composer.json');
-        $this->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file pattern', 'graph.%t');
+        $this->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file pattern', 'graph.%i.%t');
         $this->addOption('type', 't', InputOption::VALUE_REQUIRED, 'Output type', 'svg');
     }
 
@@ -27,6 +27,9 @@ class GraphCommand extends Command
     {
         $file = $input->getArgument('file');
         $outputPattern = $input->getOption('output');
+        if (false === strpos($outputPattern, '%i')) {
+            $outputPattern .= '.%i';
+        }
         if (false === strpos($outputPattern, '%t')) {
             $outputPattern .= '.%t';
         }
@@ -40,17 +43,20 @@ class GraphCommand extends Command
         $graph = new Graph($pool, $composer->getPackage());
 
         $node = $graph->getRootNode();
+        $maps = $graph->getChoiceMaps();
 
         $dumper = new GraphvizDumper();
 
-        $filename = strtr($outputPattern, array('%t' => $input->getOption('type')));
-        $dotData = $dumper->dump($node);
-        $process = new Process(
-            sprintf('circo -T%s -o%s', $input->getOption('type'), $filename),
-            null,
-            null,
-            $dotData
-        );
-        $process->run();
+        foreach ($maps as $i => $map) {
+            $filename = strtr($outputPattern, array('%i' => $i, '%t' => $input->getOption('type')));
+            $dotData = $dumper->dump($node, $map);
+            $process = new Process(
+                sprintf('dot -T%s -o%s', $input->getOption('type'), $filename),
+                null,
+                null,
+                $dotData
+            );
+            $process->run();
+        }
     }
 }

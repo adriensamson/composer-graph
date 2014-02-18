@@ -12,18 +12,17 @@ class GraphvizDumper
     protected $statements;
     protected $viewed;
 
-    public function dump(Node $node, ChoiceMap $map)
+    public function dump(Node $node, ChoiceMap $map = null)
     {
         $this->output = '';
         $this->viewed = array();
         $this->output .= "digraph {\n";
         $this->doDump($node, $map);
-        $this->doDumpConfilcts($map->getConflicts());
         $this->output .= "}\n";
         return $this->output;
     }
 
-    protected function doDump(Node $node, ChoiceMap $map)
+    protected function doDump(Node $node, ChoiceMap $map = null)
     {
         if (isset($this->viewed[(string) $node])) {
             return;
@@ -35,10 +34,19 @@ class GraphvizDumper
                 continue;
             }
             $this->viewed[(string) $name] = true;
-            $choice = $map->getChoice(explode(' ', $name)[0]);
-            if (null !== $choice) {
-                $this->output .= sprintf('"%s" -> "%s";', $node, $choice) . "\n";
-                $this->doDump($choice, $map);
+            if (null === $map) {
+                $this->output .= sprintf('"%s" [shape=diamond]', $name) . "\n";
+                $this->output .= sprintf('"%s" -> "%s";', $node, $name) . "\n";
+                foreach ($choices as $choice) {
+                    $this->output .= sprintf('"%s" -> "%s" [style=dashed];', $name, $choice) . "\n";
+                    $this->doDump($choice);
+                }
+            } else {
+                $choice = $map->getChoice(explode(' ', $name)[0]);
+                if (null !== $choice) {
+                    $this->output .= sprintf('"%s" -> "%s";', $node, $choice) . "\n";
+                    $this->doDump($choice, $map);
+                }
             }
         }
     }

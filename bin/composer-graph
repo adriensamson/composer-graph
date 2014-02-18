@@ -3,5 +3,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-$app = new \Kyklydse\ComposerGraph\Application();
+$app = new \Symfony\Component\Console\Application('Composer Graph');
+$app->add(new \Kyklydse\ComposerGraph\GraphAllCommand());
+$app->add(new \Kyklydse\ComposerGraph\GraphCommand());
 $app->run();
