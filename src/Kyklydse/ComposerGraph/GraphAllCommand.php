@@ -19,7 +19,7 @@ class GraphAllCommand extends Command
     {
         $this->setName('graph-all');
         $this->addArgument('file', InputArgument::OPTIONAL, 'Composer file to parse', 'composer.json');
-        $this->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file pattern', 'graph.%i.%t');
+        $this->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file pattern', 'graph.%s.%i.%t');
         $this->addOption('type', 't', InputOption::VALUE_REQUIRED, 'Output type', 'svg');
     }
 
@@ -48,7 +48,11 @@ class GraphAllCommand extends Command
         $dumper = new GraphvizDumper();
 
         foreach ($maps as $i => $map) {
-            $filename = strtr($outputPattern, array('%i' => $i, '%t' => $input->getOption('type')));
+            $filename = strtr($outputPattern, array(
+                '%i' => $i,
+                '%t' => $input->getOption('type'),
+                '%s' => count($map->getConflicts()) ? 'ko' : 'ok',
+            ));
             $dotData = $dumper->dump($node, $map);
             $process = new Process(
                 sprintf('dot -T%s -o%s', $input->getOption('type'), $filename),
