@@ -18,6 +18,9 @@ class GraphvizDumper
         $this->viewed = array();
         $this->output .= "digraph {\n";
         $this->doDump($node, $map);
+        if ($map !== null) {
+            $this->doDumpConflicts($map->getConflicts());
+        }
         $this->output .= "}\n";
         return $this->output;
     }
@@ -51,7 +54,7 @@ class GraphvizDumper
         }
     }
 
-    protected function doDumpConfilcts($conflicts)
+    protected function doDumpConflicts($conflicts)
     {
         foreach ($conflicts as $conflict) {
             $this->output .= sprintf('"%s" -> "%s" [color=red,dir=both];', $conflict[0], $conflict[1]) . "\n";
